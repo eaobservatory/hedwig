@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2024 East Asian Observatory
+# Copyright (C) 2016-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -26,6 +26,24 @@ from ..error import FormattedError, UserError
 
 SectionedListSection = namedtuple(
     'SectionedListSection', ('section', 'name', 'items'))
+
+
+class DefaultOrderedDict(OrderedDict):
+    """
+    OrderedDict subclass with default behavior like that of defaultdict.
+    """
+
+    def __init__(self, default_factory=None, *args, **kwargs):
+        super(DefaultOrderedDict, self).__init__(*args, **kwargs)
+        self.default_factory = default_factory
+
+    def __missing__(self, key):
+        if self.default_factory is None:
+            raise KeyError(key)
+
+        self[key] = value = self.default_factory()
+
+        return value
 
 
 class ErrorCatcher(object):

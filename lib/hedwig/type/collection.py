@@ -18,7 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from collections import OrderedDict, namedtuple, defaultdict
+from collections import OrderedDict, namedtuple
 from math import sqrt
 
 from ..astro.coord import CoordSystem, coord_from_dec_deg, coord_to_dec_deg, \
@@ -33,6 +33,7 @@ from .base import CollectionByCall, CollectionByFacility, \
     CollectionByReviewerRole, CollectionByType, \
     CollectionOrdered, CollectionSortable
 from .enum import PublicationType, ReviewState
+from .misc import DefaultOrderedDict
 from .simple import Target, TargetFracTime, TargetObject
 
 ResultTable = namedtuple('ResultTable', ('table', 'columns', 'rows'))
@@ -138,7 +139,7 @@ class ResultCollection(OrderedDict):
         """
 
         # Organize the entries into lists base on the attribute.
-        entries = defaultdict(list)
+        entries = DefaultOrderedDict(list)
         for (k, v) in self.items():
             entries[getattr(v, attr)].append((k, v))
 

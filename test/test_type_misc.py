@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2024 East Asian Observatory
+# Copyright (C) 2016-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -19,7 +19,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 from hedwig.error import Error, UserError
-from hedwig.type.misc import ErrorCatcher, \
+from hedwig.type.misc import DefaultOrderedDict, ErrorCatcher, \
     SectionedList, SectionedListSection, SkipSection
 
 from .compat import TestCase
@@ -338,3 +338,29 @@ class MiscTypeTestCase(TestCase):
                 Error, 'Exception not raised: another error'):
             with c.release() as info:
                 pass
+
+    def test_default_ordered_dict(self):
+        d = DefaultOrderedDict()
+
+        with self.assertRaises(KeyError):
+            d['a']
+
+        d = DefaultOrderedDict(list)
+
+        v = d['a']
+
+        self.assertIsInstance(v, list)
+
+        v.append(5)
+
+        d['c'].append(6)
+        d['b'].append(7)
+        d['a'].append(8)
+        d['b'].append(9)
+        d['c'].append(0)
+
+        self.assertEqual(list(d.items()), [
+            ('a', [5, 8]),
+            ('c', [6, 0]),
+            ('b', [7, 9]),
+        ])
