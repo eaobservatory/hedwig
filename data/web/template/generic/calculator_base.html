@@ -68,6 +68,14 @@
         <section>
             <h2>Results</h2>
 
+            {% if 'warnings' in output_extra %}
+                {% for warning in output_extra['warnings'] %}
+                    <p class="minor_warning">
+                        {{ warning }}
+                    </p>
+                {% endfor %}
+            {% endif %}
+
             <table id="main_result_table">
                 {% block calculator_output_table %}
                     {% for value in outputs %}
