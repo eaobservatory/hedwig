@@ -353,6 +353,7 @@
         <td colspan="2">
             {{ output_extra.raster_n_rows }} {{ 'rows' if output_extra.raster_n_rows > 1 else 'row' }}
             of {{ output_extra.raster_n_points }} {{ 'points' if output_extra.raster_n_points > 1 else 'point' }}
+            {% if 'multiscan_passes' in output_extra %}({{ output_extra.multiscan_passes }} {{ 'passes' if output_extra.multiscan_passes > 1 else 'pass' }} each point){% endif %}
         </td>
     </tr>
     {% elif 'raster_n_rows_1' in output_extra and 'raster_n_points_1' in output_extra and 'raster_n_rows_2' in output_extra and 'raster_n_points_2' in output_extra %}
@@ -361,10 +362,12 @@
         <td>
             {{ output_extra.raster_n_rows_1 }} {{ 'rows' if output_extra.raster_n_rows_1 > 1 else 'row' }}
             of {{ output_extra.raster_n_points_1 }} {{ 'points' if output_extra.raster_n_points_1 > 1 else 'point' }}
+            {% if 'multiscan_passes_1' in output_extra %}<br />({{ output_extra.multiscan_passes_1 }} {{ 'passes' if output_extra.multiscan_passes_1 > 1 else 'pass' }} each point){% endif %}
         </td>
         <td>
             {{ output_extra.raster_n_rows_2 }} {{ 'rows' if output_extra.raster_n_rows_2 > 1 else 'row' }}
             of {{ output_extra.raster_n_points_2 }} {{ 'points' if output_extra.raster_n_points_2 > 1 else 'point' }}
+            {% if 'multiscan_passes_2' in output_extra %}<br />({{ output_extra.multiscan_passes_2 }} {{ 'passes' if output_extra.multiscan_passes_2 > 1 else 'pass' }} each point){% endif %}
         </td>
     </tr>
     {% endif %}
