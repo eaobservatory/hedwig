@@ -16,6 +16,7 @@
                 <select name="{{ value.code }}">
                     {% for receiver_info in receivers %}
                         <option value="{{ receiver_info.name }}" {{ 'selected="selected"' | safe if receiver_info.name == input }}
+                            data-receiver_id="{{ receiver_info.id }}"
                             data-f_min="{{ receiver_info.f_min }}"
                             data-f_max="{{ receiver_info.f_max }}"
                             data-f_if="{{ receiver_info.f_if }}"
@@ -259,7 +260,7 @@
                 </select>
                 {% for receiver in receivers %}
                     {% if receiver.array is not none %}
-                        <select name="n_pt_jiggle_{{ receiver.name }}">
+                        <select name="n_pt_jiggle_{{ receiver.id }}">
                             {% for (jiggle_pattern_name, jiggle_pattern_pts) in receiver.array.jiggle_patterns.items() %}
                                 <option value="{{ jiggle_pattern_pts }}" {{ 'selected="selected"' | safe if jiggle_pattern_pts == input_values.n_pt }}>{{ jiggle_pattern_name }}</option>
                             {% endfor %}
@@ -287,7 +288,7 @@
                 <label>Raster scan spacing</label>
                 {% for receiver in receivers %}
                     {% if receiver.array is not none %}
-                        <select name="dy_spacing_{{ receiver.name }}">
+                        <select name="dy_spacing_{{ receiver.id }}">
                             {% for (spacing_name, spacing_spacing) in receiver.array.scan_spacings.items() %}
                                 {% with spacing_str = spacing_spacing | fmt('{:.3f}') %}
                                     <option value="{{ spacing_str }}" {{ 'selected="selected"' | safe if input_values['dy_spacing'] == spacing_str }} >{{ spacing_name }} ({{ spacing_spacing }}")</option>

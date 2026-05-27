@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -475,7 +475,7 @@ class HeterodyneCalculator(JCMTCalculator):
                         values[input_.code] = int(form['n_pt_jiggle'])
                     else:
                         values[input_.code] = int(
-                            form['n_pt_jiggle_' + receiver.name])
+                            form['n_pt_jiggle_{}'.format(receiver.id)])
                 else:
                     values[input_.code] = defaults.get(input_.code, None)
 
@@ -489,7 +489,8 @@ class HeterodyneCalculator(JCMTCalculator):
                     value = defaults.get(input_.code, None)
                 values[input_.code] = value
 
-        values['dy_spacing'] = form.get('dy_spacing_' + receiver.name, None)
+        values['dy_spacing'] = form.get(
+            'dy_spacing_{}'.format(receiver.id), None)
         if values['dy_spacing'] is None:
             values['dy_spacing'] = '{:.3f}'.format(defaults['dy'])
 
