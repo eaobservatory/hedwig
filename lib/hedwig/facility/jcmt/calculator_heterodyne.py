@@ -43,6 +43,7 @@ MappingMode = namedtuple('MappingMode', ('id', 'name', 'sw_modes'))
 SwitchingMode = namedtuple('SwitchingMode', ('id', 'name'))
 ACSISMode = namedtuple('ACSISMode', ('name', 'freq_res', 'array_only'))
 RVSystem = namedtuple('RVSystem', ('id', 'name', 'no_unit'))
+OverscanOption = namedtuple('OverscanOption', ('name', 'x', 'y', 'abbr'))
 
 
 class HeterodyneCalculator(JCMTCalculator):
@@ -88,7 +89,14 @@ class HeterodyneCalculator(JCMTCalculator):
         ('opt', RVSystem(HeterodyneITC.RV_DEF_OPT, 'optical',  False)),
     ))
 
-    version = 3
+    overscan_options = OrderedDict((
+        ('x',   OverscanOption('Width only',        True,  False, None)),
+        ('xy',  OverscanOption('Width and height',  True,  True,  'both')),
+        ('y',   OverscanOption('Height only',       False, True,  'height')),
+        ('no',  OverscanOption('No overscan',       False, False, 'none')),
+    ))
+
+    version = 4
 
     @classmethod
     def get_code(cls):
@@ -240,8 +248,14 @@ class HeterodyneCalculator(JCMTCalculator):
             CalculatorValue(
                 'dy', 'Pixel/scan height', 'dy', '{}', '"'),
             CalculatorValue(
+                'os', 'Array overscan', 'OS', '{}', None),
+            CalculatorValue(
                 'basket', 'Basket weave', 'BW', '{}', None),
         ], section='obs', section_name='Observation')
+
+        if version < 4:
+            inputs.delete_item_where(lambda x: x.code in (
+                'os',))
 
         if version < 3:
             inputs.delete_item_where(lambda x: x.code in (
@@ -259,7 +273,7 @@ class HeterodyneCalculator(JCMTCalculator):
         inputs.add_section('req', 'Requirement')
 
         if mode == self.CALC_TIME:
-            if version in (1, 2, 3):
+            if version in (1, 2, 3, 4):
                 inputs.extend([
                     CalculatorValue(
                         'rms', 'Target sensitivity',
@@ -269,7 +283,7 @@ class HeterodyneCalculator(JCMTCalculator):
                 raise CalculatorError('Unknown version.')
 
         elif mode == self.CALC_RMS_FROM_ELAPSED_TIME:
-            if version in (1, 2, 3):
+            if version in (1, 2, 3, 4):
                 inputs.extend([
                     CalculatorValue(
                         'elapsed', 'Elapsed time',
@@ -279,7 +293,7 @@ class HeterodyneCalculator(JCMTCalculator):
                 raise CalculatorError('Unknown version.')
 
         elif mode == self.CALC_RMS_FROM_INT_TIME:
-            if version in (1, 2, 3):
+            if version in (1, 2, 3, 4):
                 inputs.extend([
                     CalculatorValue(
                         'int_time', 'Integration time',
@@ -321,6 +335,7 @@ class HeterodyneCalculator(JCMTCalculator):
             ('dim_y', 180),
             ('dx', 8),
             ('dy', 8),
+            ('os', 'x'),
             ('basket', False),
             ('sep_off', False),
             ('cont', False),
@@ -383,7 +398,7 @@ class HeterodyneCalculator(JCMTCalculator):
 
             elif code in (
                     'rx', 'mm', 'sw', 'sb', 'side', 'sep_pol', 'n_pt',
-                    'basket', 'sep_off', 'cont', 'res_unit', 'rv_sys',
+                    'os', 'basket', 'sep_off', 'cont', 'res_unit', 'rv_sys',
                     ):
                 formatted = value
 
@@ -437,7 +452,7 @@ class HeterodyneCalculator(JCMTCalculator):
                 else:
                     values[input_.code] = ''
 
-            elif input_.code == 'side':
+            elif input_.code in ('side', 'os'):
                 values[input_.code] = str_or_none(form.get(input_.code, ''))
 
             elif input_.code == 'tau':
@@ -576,6 +591,11 @@ class HeterodyneCalculator(JCMTCalculator):
             input_['if'] = None
             input_['side'] = None
 
+        if old_version < 4:
+            map_mode = self.map_modes[input_['mm']].id
+            if map_mode == HeterodyneITC.RASTER:
+                input_['os'] = 'x'
+
         return input_
 
     def get_outputs(self, mode, version=None):
@@ -590,7 +610,7 @@ class HeterodyneCalculator(JCMTCalculator):
         outputs = []
 
         if mode == self.CALC_TIME:
-            if version in (1, 2, 3):
+            if version in (1, 2, 3, 4):
                 outputs.extend([
                     CalculatorValue(
                         'elapsed', 'Elapsed time', 'Elapsed',
@@ -600,7 +620,7 @@ class HeterodyneCalculator(JCMTCalculator):
                 raise CalculatorError('Unknown version.')
 
         elif mode == self.CALC_RMS_FROM_ELAPSED_TIME:
-            if version in (1, 2, 3):
+            if version in (1, 2, 3, 4):
                 outputs.extend([
                     CalculatorValue(
                         'rms', 'Sensitivity', '\u03c3', '{:.3f}', 'K TA*'),
@@ -609,7 +629,7 @@ class HeterodyneCalculator(JCMTCalculator):
                 raise CalculatorError('Unknown version.')
 
         elif mode == self.CALC_RMS_FROM_INT_TIME:
-            if version in (1, 2, 3):
+            if version in (1, 2, 3, 4):
                 outputs.extend([
                     CalculatorValue(
                         'rms', 'Sensitivity', '\u03c3', '{:.3f}', 'K TA*'),
@@ -640,6 +660,7 @@ class HeterodyneCalculator(JCMTCalculator):
             'int_time_minimum': self.itc.int_time_minimum,
             'position_types': self.position_type,
             'rv_systems': self.rv_systems,
+            'overscan_options': self.overscan_options,
         }
 
     def parse_input(self, mode, input_, defaults=None):
@@ -706,6 +727,7 @@ class HeterodyneCalculator(JCMTCalculator):
             parsed['dim_y'] = None
             parsed['dx'] = None
             parsed['dy'] = None
+            parsed['os'] = None
 
         if parsed['freq'] is not None:
             parsed['species'] = None
@@ -835,6 +857,7 @@ class HeterodyneCalculator(JCMTCalculator):
                 sky_freq, receiver.f_max)
 
         dual_pol = ((receiver.n_mix > 1) and not input_['sep_pol'])
+        overscan = self.overscan_options.get(input_['os'], None)
 
         kwargs = {
             'receiver': receiver.id,
@@ -858,6 +881,8 @@ class HeterodyneCalculator(JCMTCalculator):
                 None if (input_['side'] is None)
                 else input_['side'].upper()),
             'with_extra_output': True,
+            'array_overscan_x': (False if overscan is None else overscan.x),
+            'array_overscan_y': (False if overscan is None else overscan.y),
         }
 
         try:
@@ -952,6 +977,8 @@ class HeterodyneCalculator(JCMTCalculator):
 
         self._condense_rv_sys(calculation, 'rv', 'rv_sys')
 
+        self._condense_array_overscan(calculation, 'os')
+
     def _condense_rv_sys(self, calculation, code, code_sys):
         try:
             input_sys = calculation.input[code_sys]
@@ -975,6 +1002,23 @@ class HeterodyneCalculator(JCMTCalculator):
 
         calculation.inputs.delete_item_where(
             lambda x: x.code == code_sys)
+
+    def _condense_array_overscan(self, calculation, code):
+        try:
+            os = calculation.input[code]
+
+        except KeyError:
+            return
+
+        overscan = self.overscan_options.get(os, None)
+
+        if overscan is None:
+            result = None
+
+        else:
+            result = overscan.abbr
+
+        calculation.input[code] = result
 
     def view_line_catalog(self, current_user, db):
         """

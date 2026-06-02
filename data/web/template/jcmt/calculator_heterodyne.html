@@ -213,6 +213,34 @@
                 <input type="number" name="dy" value="{{ input_values['dy'] }}" min="1" step="any" />
             {% elif value.code in ('dim_x', 'dim_y', 'dx', 'dy') %}
                 <input type="number" name="{{ value.code }}" value="{{ input }}" min="1" step="any" />
+            {% elif value.code == 'os' %}
+                <select name="os">
+                    {% for (os_opt, os_opt_info) in overscan_options.items() %}
+                        <option value="{{ os_opt }}" {{ 'selected="selected"' | safe if input_values.os == os_opt }}>{{ os_opt_info.name }}</option>
+                    {% endfor %}
+                </select>
+                <div class="formtip">
+                    <div>
+                        <p>
+                            In raster mode with an array receiver,
+                            the map can be enlarged to ensure complete coverage
+                            of the target area.
+                        </p>
+                        <p>
+                            <b>Width:</b>
+                            the distance along the first dimension is increased.
+                            <br />
+                            <b>Height:</b>
+                            this calculator will include additional scan rows,
+                            corresponding to an increase in the second dimension.
+                        </p>
+                        <p>
+                            <i>The default option &ldquo;Width only&rdquo; should
+                            approximate the distance automatically added by
+                            the telescope control system.</i>
+                        </p>
+                    </div>
+                </div>
             {% elif value.code == 'basket' %}
                 <input type="checkbox" name="{{ value.code }}" value="true" {{ 'checked="checked"' | safe if input }} />
                 <div class="formtip">
@@ -354,7 +382,8 @@
         <td colspan="2">
             {{ output_extra.raster_n_rows }} {{ 'rows' if output_extra.raster_n_rows > 1 else 'row' }}
             of {{ output_extra.raster_n_points }} {{ 'points' if output_extra.raster_n_points > 1 else 'point' }}
-            {% if 'multiscan_passes' in output_extra %}({{ output_extra.multiscan_passes }} {{ 'passes' if output_extra.multiscan_passes > 1 else 'pass' }} each point){% endif %}
+            {% if 'multiscan_passes' in output_extra %}<br />({{ output_extra.multiscan_passes }} {{ 'passes' if output_extra.multiscan_passes > 1 else 'pass' }} each point){% endif %}
+            {% if 'overscanned_dim_y' in output_extra %}<br />(modified height {{ output_extra.overscanned_dim_y }}"){% endif %}
         </td>
     </tr>
     {% elif 'raster_n_rows_1' in output_extra and 'raster_n_points_1' in output_extra and 'raster_n_rows_2' in output_extra and 'raster_n_points_2' in output_extra %}
@@ -364,11 +393,13 @@
             {{ output_extra.raster_n_rows_1 }} {{ 'rows' if output_extra.raster_n_rows_1 > 1 else 'row' }}
             of {{ output_extra.raster_n_points_1 }} {{ 'points' if output_extra.raster_n_points_1 > 1 else 'point' }}
             {% if 'multiscan_passes_1' in output_extra %}<br />({{ output_extra.multiscan_passes_1 }} {{ 'passes' if output_extra.multiscan_passes_1 > 1 else 'pass' }} each point){% endif %}
+            {% if 'overscanned_dim_y_1' in output_extra %}<br />(modified height {{ output_extra.overscanned_dim_y_1 }}"){% endif %}
         </td>
         <td>
             {{ output_extra.raster_n_rows_2 }} {{ 'rows' if output_extra.raster_n_rows_2 > 1 else 'row' }}
             of {{ output_extra.raster_n_points_2 }} {{ 'points' if output_extra.raster_n_points_2 > 1 else 'point' }}
             {% if 'multiscan_passes_2' in output_extra %}<br />({{ output_extra.multiscan_passes_2 }} {{ 'passes' if output_extra.multiscan_passes_2 > 1 else 'pass' }} each point){% endif %}
+            {% if 'overscanned_dim_y_2' in output_extra %}<br />(modified height {{ output_extra.overscanned_dim_y_2 }}"){% endif %}
         </td>
     </tr>
     {% endif %}

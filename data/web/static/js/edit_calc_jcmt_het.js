@@ -139,6 +139,7 @@ $(document).ready(function () {
         var is_grid = (mm_select.val() === 'grid');
         var is_jiggle = (mm_select.val() === 'jiggle');
         var is_raster = (mm_select.val() === 'raster');
+        var is_array_raster = (is_raster && is_array);
 
         $('input[name=n_pt]').prop('disabled', (! is_grid));
 
@@ -153,11 +154,12 @@ $(document).ready(function () {
         $('input[name=dim_y]').prop('disabled', ! is_raster);
         $('input[name=dx]').prop('disabled', (! is_raster) || is_array);
         $('input[name=dy]').prop('disabled', (! is_raster) || is_array);
+        $('select[name=os]').prop('disabled', ! is_array_raster);
         basket_checkbox.prop('disabled', ! is_raster);
 
         $('select[name^=dy_spacing_]').prop('disabled', true);
 
-        if (is_raster && is_array) {
+        if (is_array_raster) {
             $('select[name=dy_spacing_' + rx_id + ']').prop('disabled', false);
             $('input[name=dx]').val(rx.data('pixel_size'));
             $('input[name=dy]').val(rx.data('pixel_size'));
