@@ -607,6 +607,25 @@ class HeterodyneCalculator(JCMTCalculator):
             if map_mode == HeterodyneITC.RASTER:
                 input_['os'] = 'x'
 
+                # Adjust dy to closest matching scan spacing.
+                array = None
+                try:
+                    receiver = self.get_receiver_by_name(
+                        input_['rx'], as_object=True)
+                    array = receiver.array
+                except:
+                    pass
+
+                if array is not None:
+                    dy_closest = None
+                    for dy_i in array.scan_spacings.values():
+                        if (dy_closest is None) or (
+                                abs(dy_i - input_['dy'])
+                                < abs(dy_closest - input_['dy'])):
+                            dy_closest = dy_i
+
+                    input_['dy'] = dy_closest
+
         return input_
 
     def get_outputs(self, mode, version=None):
