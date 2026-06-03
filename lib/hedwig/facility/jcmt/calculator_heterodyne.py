@@ -32,7 +32,7 @@ from ...type.simple import \
     CalculatorMode, CalculatorResult, CalculatorValue, \
     RouteInfo
 from ...util import FormatSigFig
-from ...view.util import float_or_none, str_or_none, parse_time
+from ...view.util import float_or_none, int_or_none, str_or_none, parse_time
 from .calculator_jcmt import JCMTCalculator
 from .type import JCMTInstrument, JCMTWeather
 
@@ -420,9 +420,20 @@ class HeterodyneCalculator(JCMTCalculator):
         formatted_inputs.update({
             'tau_band': self.get_tau_band(values['tau']),
             'acsis_mode': acsis_mode,
-            'dy_spacing': '{:.3f}'.format(
-                values['dy'] if values['dy'] is not None else defaults['dy']),
         })
+
+        # Match 'dy' value to array receiver spacing lists.
+        for (rx_id, rx_info) in self.receivers.items():
+            array = rx_info.array
+            if array is not None:
+                dy_spacing = None
+
+                for (i, dy_i) in enumerate(array.scan_spacings.values()):
+                    if abs(dy_i - values['dy']) < 1.0:
+                        dy_spacing = i
+                        break
+
+                formatted_inputs['dy_spacing_{}'.format(rx_id)] = dy_spacing
 
         return formatted_inputs
 
@@ -504,10 +515,10 @@ class HeterodyneCalculator(JCMTCalculator):
                     value = defaults.get(input_.code, None)
                 values[input_.code] = value
 
-        values['dy_spacing'] = form.get(
-            'dy_spacing_{}'.format(receiver.id), None)
-        if values['dy_spacing'] is None:
-            values['dy_spacing'] = '{:.3f}'.format(defaults['dy'])
+        for (rx_id, rx_info) in self.receivers.items():
+            if rx_info.array is not None:
+                values['dy_spacing_{}'.format(rx_id)] = int_or_none(
+                    form.get('dy_spacing_{}'.format(rx_id), ''))
 
         return values
 
@@ -693,7 +704,18 @@ class HeterodyneCalculator(JCMTCalculator):
                     if receiver.array is None:
                         parsed[field.code] = float(input_[field.code])
                     else:
-                        parsed[field.code] = float(input_['dy_spacing'])
+                        dy_spacing = input_[
+                            'dy_spacing_{}'.format(receiver.id)]
+
+                        for (i, dy_i) in enumerate(
+                                receiver.array.scan_spacings.values()):
+                            if i == dy_spacing:
+                                parsed[field.code] = dy_i
+                                break
+
+                        else:
+                            raise UserError(
+                                'Unexpected selection for scan spacing.')
 
                 elif field.code in ('dim_x', 'dim_y', 'int_time'):
                     parsed[field.code] = float(input_[field.code])

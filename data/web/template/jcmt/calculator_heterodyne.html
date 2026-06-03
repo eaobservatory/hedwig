@@ -316,13 +316,13 @@
                 <label>Raster scan spacing</label>
                 {% for receiver in receivers %}
                     {% if receiver.array is not none %}
-                        <select name="dy_spacing_{{ receiver.id }}">
-                            {% for (spacing_name, spacing_spacing) in receiver.array.scan_spacings.items() %}
-                                {% with spacing_str = spacing_spacing | fmt('{:.3f}') %}
-                                    <option value="{{ spacing_str }}" {{ 'selected="selected"' | safe if input_values['dy_spacing'] == spacing_str }} >{{ spacing_name }} ({{ spacing_spacing }}")</option>
-                                {% endwith %}
-                            {% endfor %}
-                        </select>
+                        {% with dy_spacing = input_values.get(receiver.id | fmt('dy_spacing_{}')) %}
+                            <select name="dy_spacing_{{ receiver.id }}">
+                                {% for (spacing_name, spacing_spacing) in receiver.array.scan_spacings.items() %}
+                                    <option value="{{ loop.index0 }}" {{ 'selected="selected"' | safe if dy_spacing == loop.index0 }} >{{ spacing_name }} ({{ spacing_spacing }}")</option>
+                                {% endfor %}
+                            </select>
+                        {% endwith %}
                     {% endif %}
                 {% endfor %}
             </li>
