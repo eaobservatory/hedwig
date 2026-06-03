@@ -319,7 +319,7 @@
                         {% with dy_spacing = input_values.get(receiver.id | fmt('dy_spacing_{}')) %}
                             <select name="dy_spacing_{{ receiver.id }}">
                                 {% for (spacing_name, spacing_spacing) in receiver.array.scan_spacings.items() %}
-                                    <option value="{{ loop.index0 }}" {{ 'selected="selected"' | safe if dy_spacing == loop.index0 }} >{{ spacing_name }} ({{ spacing_spacing }}")</option>
+                                    <option value="{{ loop.index0 }}" {{ 'selected="selected"' | safe if dy_spacing == loop.index0 }} >{{ spacing_name }} ({{ spacing_spacing | fmt('{:.2f}') }}")</option>
                                 {% endfor %}
                             </select>
                         {% endwith %}
