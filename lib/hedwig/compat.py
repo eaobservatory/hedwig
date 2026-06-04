@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from itertools import islice
 from sys import version_info
 
 python_version = version_info[0]
@@ -82,6 +83,18 @@ if python_version < 3:
 
         dictionary[key] = dictionary.pop(key)
 
+    def nth_value(dictionary, n):
+        """
+        Get the "nth" value (counting from 0) of a dictionary.
+
+        :raises IndexError: if the dictionary has `n` or fewer values.
+        """
+
+        try:
+            return next(islice(dictionary.itervalues(), n, None))
+        except StopIteration:
+            raise IndexError('dictionary has no value {}'.format(n))
+
     def floor(value):
         return int(_math_floor(value))
 
@@ -142,6 +155,18 @@ else:
         """
 
         dictionary.move_to_end(key)
+
+    def nth_value(dictionary, n):
+        """
+        Get the "nth" value (counting from 0) of a dictionary.
+
+        :raises IndexError: if the dictionary has `n` or fewer values.
+        """
+
+        try:
+            return next(islice(dictionary.values(), n, None))
+        except StopIteration:
+            raise IndexError('dictionary has no value {}'.format(n))
 
     class ExceptionWithMessage(Exception):
         """Exception class which restores the 'message' property."""

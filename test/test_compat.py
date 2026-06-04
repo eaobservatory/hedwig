@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, \
 from collections import OrderedDict
 
 from hedwig.compat import char, first_value, iter_items, move_to_end, \
-    split_version, string_type
+    nth_value, split_version, string_type
 
 from .compat import TestCase
 
@@ -44,11 +44,20 @@ class CompatTestCase(TestCase):
     def test_first_value(self):
         self.assertEqual(first_value({4: 8}), 8)
 
-        self.assertEqual(first_value(OrderedDict(((1, 2), (3, 4), (5, 6)))),
-                         2)
+        d = OrderedDict(((1, 2), (3, 4), (5, 6)))
+
+        self.assertEqual(first_value(d), 2)
 
         with self.assertRaises(IndexError):
             first_value({})
+
+        # Also test nth_value function.
+        self.assertEqual(nth_value(d, 0), 2)
+        self.assertEqual(nth_value(d, 1), 4)
+        self.assertEqual(nth_value(d, 2), 6)
+
+        with self.assertRaises(IndexError):
+            nth_value(d, 3)
 
     def test_iter_items(self):
         d = OrderedDict(((1, 'a'), (2, 'b'), (3, 'c')))

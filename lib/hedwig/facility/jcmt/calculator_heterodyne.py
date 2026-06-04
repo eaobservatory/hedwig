@@ -26,6 +26,7 @@ from jcmt_itc_heterodyne import HeterodyneITC, HeterodyneITCError
 from jcmt_itc_heterodyne.receiver import HeterodyneReceiver, ReceiverInfo
 from jcmt_itc_heterodyne.line_catalog import get_line_catalog
 
+from ...compat import nth_value
 from ...error import CalculatorError, UserError
 from ...type.misc import SectionedList
 from ...type.simple import \
@@ -723,16 +724,12 @@ class HeterodyneCalculator(JCMTCalculator):
                     if receiver.array is None:
                         parsed[field.code] = float(input_[field.code])
                     else:
-                        dy_spacing = input_[
-                            'dy_spacing_{}'.format(receiver.id)]
+                        try:
+                            parsed[field.code] = nth_value(
+                                receiver.array.scan_spacings,
+                                input_['dy_spacing_{}'.format(receiver.id)])
 
-                        for (i, dy_i) in enumerate(
-                                receiver.array.scan_spacings.values()):
-                            if i == dy_spacing:
-                                parsed[field.code] = dy_i
-                                break
-
-                        else:
+                        except IndexError:
                             raise UserError(
                                 'Unexpected selection for scan spacing.')
 
