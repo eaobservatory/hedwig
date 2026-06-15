@@ -18,9 +18,13 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+import json
+
 from hedwig.error import Error, UserError
-from hedwig.type.misc import DefaultOrderedDict, ErrorCatcher, \
-    SectionedList, SectionedListSection, SkipSection
+from hedwig.type.misc import DefaultInt, DefaultFloat, \
+    DefaultOrderedDict, ErrorCatcher, \
+    SectionedList, SectionedListSection, SkipSection, \
+    is_default_value
 
 from .compat import TestCase
 
@@ -364,3 +368,28 @@ class MiscTypeTestCase(TestCase):
             ('c', [6, 0]),
             ('b', [7, 9]),
         ])
+
+    def test_default_values(self):
+        d = {
+            'a': 12,
+            'b': DefaultInt(30),
+            'c': 4.5,
+            'd': DefaultFloat(6.6),
+        }
+
+        # Check we can identify the default values:
+        self.assertFalse(is_default_value(d['a']))
+        self.assertTrue(is_default_value(d['b']))
+        self.assertFalse(is_default_value(d['c']))
+        self.assertTrue(is_default_value(d['d']))
+
+        # Check we can still operate on them.
+        self.assertEqual(d['b'] * 2, 60)
+        self.assertAlmostEqual(d['d'] / 2.0, 3.3)
+
+        # Check we can still JSON-encode.
+        dd = json.loads(json.dumps(d))
+        self.assertEqual(dd['a'], 12)
+        self.assertEqual(dd['b'], 30)
+        self.assertAlmostEqual(dd['c'], 4.5)
+        self.assertAlmostEqual(dd['d'], 6.6)

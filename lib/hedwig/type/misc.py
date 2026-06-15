@@ -28,6 +28,32 @@ SectionedListSection = namedtuple(
     'SectionedListSection', ('section', 'name', 'items'))
 
 
+class DefaultInt(int):
+    """
+    Subclass of `int` which can be used to label default values.
+
+    """
+
+    pass
+
+
+class DefaultFloat(float):
+    """
+    Subclass of `float` which can be used to label default values.
+    """
+
+    pass
+
+
+def is_default_value(value):
+    """
+    Determine whether a value is a default, i.e. an instance of
+    `DefaultFloat` or `DefaultInt`.
+    """
+
+    return isinstance(value, (DefaultFloat, DefaultInt))
+
+
 class DefaultOrderedDict(OrderedDict):
     """
     OrderedDict subclass with default behavior like that of defaultdict.
