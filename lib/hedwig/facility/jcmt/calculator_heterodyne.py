@@ -28,7 +28,7 @@ from jcmt_itc_heterodyne.line_catalog import get_line_catalog
 
 from ...compat import nth_value
 from ...error import CalculatorError, UserError
-from ...type.misc import SectionedList
+from ...type.misc import DefaultFloat, SectionedList, is_default_value
 from ...type.simple import \
     CalculatorMode, CalculatorResult, CalculatorValue, \
     RouteInfo
@@ -334,8 +334,8 @@ class HeterodyneCalculator(JCMTCalculator):
             ('n_pt', 1),
             ('dim_x', 180),
             ('dim_y', 180),
-            ('dx', 8),
-            ('dy', 8),
+            ('dx', 8.0),
+            ('dy', DefaultFloat(8.0)),  # Label as default to not match spacing
             ('os', 'x'),
             ('basket', False),
             ('sep_off', False),
@@ -344,7 +344,7 @@ class HeterodyneCalculator(JCMTCalculator):
 
         if mode == self.CALC_TIME:
             return dict(common_inputs + [
-                ('rms', 1.0),
+                ('rms', 0.1),
             ])
 
         elif mode == self.CALC_RMS_FROM_ELAPSED_TIME:
@@ -354,7 +354,7 @@ class HeterodyneCalculator(JCMTCalculator):
 
         elif mode == self.CALC_RMS_FROM_INT_TIME:
             return dict(common_inputs + [
-                ('int_time', 30.0),
+                ('int_time', 10.0),
             ])
 
         else:
@@ -429,8 +429,17 @@ class HeterodyneCalculator(JCMTCalculator):
             if array is not None:
                 dy_spacing = None
 
+                if is_default_value(values['dy']):
+                    # If we are attempting to format the default value, instead
+                    # use the default spacing for this receiver.
+                    value = array.default_scan_spacing
+
+                else:
+                    # Otherwise use the current value.
+                    value = values['dy']
+
                 for (i, dy_i) in enumerate(array.scan_spacings.values()):
-                    if abs(dy_i - values['dy']) < 1.0:
+                    if abs(dy_i - value) < 1.0:
                         dy_spacing = i
                         break
 
