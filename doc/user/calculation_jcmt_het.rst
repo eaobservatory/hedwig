@@ -119,6 +119,36 @@ which you wish to make.
     reference taken per scan line.
     If you select this option you need to
     enter the size of your map.
+    Note that the first size parameter (the map "width") defines the length of
+    scan rows while the second size parameter (the map "height")
+    controls how many rows will be performed to complete the map.
+
+    For a non-array receiver you will also need to select a pixel
+    size to achieve adequate sampling given the beam size at the
+    observing frequency.
+    However when performing a raster map with an array receiver
+    (i.e. HARP), the pixel size will be determined by the array geometry.
+    Instead you can select the scan spacing --- the distance moved by the
+    telescope from one scan row to the next.
+    Small spacing values allow each point in the map to be passed over
+    by multiple different receptors, giving
+    `smoother noise performance <https://www.eaobservatory.org/jcmt/instrumentation/heterodyne/observing-modes/harp-rasters/>`_.
+    The telescope control system automatically increases the width
+    of the map to ensure full coverage by the whole array --- this is
+    represented by the default array overscan option of "width only".
+    If you wish also to ensure even coverage of the whole specified height,
+    then you may select "width and height" here.
+    The calculator will then add extra rows to the scan
+    (depending on the scan spacing)
+    and report the modified map height in the "raster parameters"
+    section of the results.
+
+    Finally you may select "basket weave" to have the calculator
+    split the observing time into two components with different
+    scan directions. The calculator will show these as
+    "along width" corresponding to the standard scan direction
+    and "along height" where the size parameters are swapped
+    such that the second parameter becomes the scan length.
 
   Jiggle mapping
     The secondary mirror of the telescope moves in a pre-defined pattern.
