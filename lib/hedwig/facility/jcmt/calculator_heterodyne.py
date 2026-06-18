@@ -42,7 +42,7 @@ ReceiverInfoID = namedtuple('ReceiverInfoID', ReceiverInfo._fields + (
 
 MappingMode = namedtuple('MappingMode', ('id', 'name', 'sw_modes'))
 SwitchingMode = namedtuple('SwitchingMode', ('id', 'name'))
-ACSISMode = namedtuple('ACSISMode', ('name', 'freq_res', 'array_only'))
+ACSISMode = namedtuple('ACSISMode', ('name', 'freq_res'))
 RVSystem = namedtuple('RVSystem', ('id', 'name', 'no_unit'))
 OverscanOption = namedtuple('OverscanOption', ('name', 'x', 'y', 'abbr'))
 
@@ -73,15 +73,11 @@ class HeterodyneCalculator(JCMTCalculator):
         ('frsw', SwitchingMode(HeterodyneITC.FRSW, 'Frequency')),
     ))
 
-    # Note: the JavaScript assumes that each array-only mode is preceeded
-    # by the equivalent non-array-only mode.  In other words, if an array-only
-    # mode is selected when a non-array receiver is chosen, it should change
-    # to the preceeding mode.
     acsis_modes = OrderedDict((
-        (1, ACSISMode('250 MHz',  0.0305, False)),
-        (2, ACSISMode('400 MHz',  0.061,  True)),
-        (3, ACSISMode('1000 MHz', 0.488,  False)),
-        (4, ACSISMode('1600 MHz', 0.977,  True)),
+        (1, ACSISMode('250 MHz x 8192',  0.0305)),
+        (2, ACSISMode('250 MHz x 4096',  0.061)),
+        (3, ACSISMode('1000 MHz x 2048', 0.488)),
+        (4, ACSISMode('1000 MHz x 1024', 0.977)),
     ))
 
     rv_systems = OrderedDict((
@@ -411,9 +407,6 @@ class HeterodyneCalculator(JCMTCalculator):
         acsis_mode = None
         if values['res_unit'] == 'MHz':
             for (acsis_mode_num, acsis_mode_info) in self.acsis_modes.items():
-                if acsis_mode_info.array_only and not is_array_receiver:
-                    continue
-
                 if abs(values['res'] - acsis_mode_info.freq_res) < 0.0001:
                     acsis_mode = acsis_mode_num
                     break

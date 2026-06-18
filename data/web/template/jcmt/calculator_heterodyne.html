@@ -98,11 +98,11 @@
             {% elif value.code == 'res' %}
                 <select name="acsis_mode">
                     {% for (acsis_mode_num, acsis_mode_info) in acsis_modes.items() %}
-                        <option value="{{ acsis_mode_num }}" {{ 'selected="selected"' | safe if acsis_mode_num == input_values.acsis_mode }} data-resolution="{{ acsis_mode_info.freq_res }}" data-array_only="{{ 'true' if acsis_mode_info.array_only else 'false' }}">
+                        <option value="{{ acsis_mode_num }}" {{ 'selected="selected"' | safe if acsis_mode_num == input_values.acsis_mode }} data-resolution="{{ acsis_mode_info.freq_res }}">
                             {{ acsis_mode_info.name }} mode
                         </option>
                     {% endfor %}
-                    <option value="other" {{ 'selected="selected"' | safe if input_values.acsis_mode is none }} data-array_only="false">Other</option>
+                    <option value="other" {{ 'selected="selected"' | safe if input_values.acsis_mode is none }}>Other</option>
                 </select>
                 <input type="number" name="{{ value.code }}" value="{{ input }}" min="0" step="any" {{ 'disabled="disabled"' | safe if input_values.acsis_mode is not none }} />
                 <select name="res_unit" {{ 'disabled="disabled"' | safe if input_values.acsis_mode is not none }}>

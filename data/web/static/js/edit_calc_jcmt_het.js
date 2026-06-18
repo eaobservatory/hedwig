@@ -84,18 +84,6 @@ $(document).ready(function () {
             $('input[name=sb][value=dsb]').prop('checked', true);
         }
 
-        freq_res_select.children().each(function () {
-            var acsis_mode = $(this);
-            var is_disabled = (acsis_mode.data('array_only') && ! is_array);
-
-            if (acsis_mode.prop('selected') && is_disabled) {
-                freq_res_select.val(acsis_mode.prev().val());
-                check_freq_res();
-            };
-
-            acsis_mode.prop('disabled', is_disabled);
-        });
-
         check_if_opt();
 
         check_mode_opt();
