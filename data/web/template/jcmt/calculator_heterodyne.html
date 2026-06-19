@@ -113,14 +113,6 @@
                 <div class="formtip">
                     <div>
                         <p>
-                            ACSIS can use 250 MHz or 1000 MHz sub-bands.
-                            In the case of HARP these can either be &ldquo;chained&rdquo;
-                            for higher resolution or overlapped as a
-                            400 MHz or 1600 MHz &ldquo;hybrid&rdquo; band.
-                            Other receivers can use one of these &ldquo;hybrid&rdquo; modes
-                            without a loss of resolution.
-                        </p>
-                        <p>
                             Please see the
                             <a href="https://www.eaobservatory.org/jcmt/instrumentation/heterodyne/acsis/" target="_blank">ACSIS spectrometer information</a>
                             for more information, including the resolution
@@ -128,8 +120,28 @@
                             frequencies.
                         </p>
                         <p>
+                            <b>&ldquo;Chained&rdquo; modes:</b>
+                            <br />&nbsp; &bull; 250 MHz &times; 8192
+                            <br />&nbsp; &bull; 1000 MHz &times; 2048
+                            <br />
+                            Combine two correlators to increase the resolution
+                            (number of channels).
+                        </p>
+                        <p>
+                            <b>Basic modes:</b>
+                            <br />&nbsp; &bull; 250 MHz &times; 4096
+                            <br />&nbsp; &bull; 1000 MHz &times; 1024
+                            <br />
+                            <i>HARP:</i> used in 400&nbsp;MHz,
+                            1600&nbsp;MHz &ldquo;hybrid&rdquo; modes,
+                            or with two frequencies.
+                            <br />
+                            <i>Other receivers:</i> only used in wider hybrids
+                            or with multiple frequencies.
+                        </p>
+                        <p>
                             Please select &ldquo;Other&rdquo; to enter
-                            a specific resolution in MHz or km/s.
+                            a specific resolution in km/s or MHz.
                             If a resolution is entered in terms of frequency,
                             it corresponds to the sky frequency.
                         </p>
@@ -325,6 +337,25 @@
                         {% endwith %}
                     {% endif %}
                 {% endfor %}
+                <div class="formtip">
+                    <div>
+                        <p>
+                            In raster mode with an array receiver,
+                            you can choose how far the telescope moves
+                            between scan rows.
+                            This does not affect the pixel size
+                            since this is set by the array geometry.
+                        </p>
+                        <p>
+                            Small spacing values allow each point in the map to be passed over
+                            by multiple different receptors, giving
+                            smoother noise performance.
+                        </p>
+                        <p>
+                            <a href="https://www.eaobservatory.org/jcmt/instrumentation/heterodyne/observing-modes/harp-rasters/">HARP raster examples</a>
+                        </p>
+                    </div>
+                </div>
             </li>
         {% endif %}
     {% endif %}
