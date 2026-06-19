@@ -422,7 +422,7 @@ class HeterodyneCalculator(JCMTCalculator):
             if array is not None:
                 dy_spacing = None
 
-                if is_default_value(values['dy']):
+                if (values['dy'] is None) or is_default_value(values['dy']):
                     # If we are attempting to format the default value, instead
                     # use the default spacing for this receiver.
                     value = array.default_scan_spacing
@@ -607,7 +607,10 @@ class HeterodyneCalculator(JCMTCalculator):
 
         if old_version < 4:
             map_mode = self.map_modes[input_['mm']].id
-            if map_mode == HeterodyneITC.RASTER:
+            if map_mode != HeterodyneITC.RASTER:
+                input_['os'] = None
+
+            else:
                 input_['os'] = 'x'
 
                 # Adjust dy to closest matching scan spacing.
