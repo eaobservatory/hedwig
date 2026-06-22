@@ -363,8 +363,8 @@ class HeterodyneCalculator(JCMTCalculator):
 
         defaults = self.get_default_input(self.CALC_TIME)
 
-        is_array_receiver = self.get_receiver_by_name(
-            values['rx'], as_object=True).array is not None
+        receiver = self.get_receiver_by_name(values['rx'], as_object=True)
+        is_array_receiver = receiver.array is not None
 
         formatted_inputs = {}
 
@@ -422,7 +422,9 @@ class HeterodyneCalculator(JCMTCalculator):
             if array is not None:
                 dy_spacing = None
 
-                if (values['dy'] is None) or is_default_value(values['dy']):
+                if ((values['dy'] is None)
+                        or (rx_id != receiver.id)
+                        or is_default_value(values['dy'])):
                     # If we are attempting to format the default value, instead
                     # use the default spacing for this receiver.
                     value = array.default_scan_spacing
