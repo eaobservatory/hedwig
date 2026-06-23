@@ -23,7 +23,8 @@ import json
 from math import acos, degrees
 
 from jcmt_itc_heterodyne import HeterodyneITC, HeterodyneITCError
-from jcmt_itc_heterodyne.receiver import HeterodyneReceiver, ReceiverInfo
+from jcmt_itc_heterodyne.receiver import ArrayInfo, \
+    HeterodyneReceiver, ReceiverInfo
 from jcmt_itc_heterodyne.line_catalog import get_line_catalog
 
 from ...compat import nth_value
@@ -37,7 +38,10 @@ from ...view.util import float_or_none, int_or_none, str_or_none, parse_time
 from .calculator_jcmt import JCMTCalculator
 from .type import JCMTInstrument, JCMTWeather
 
-ReceiverInfoID = namedtuple('ReceiverInfoID', ReceiverInfo._fields + (
+ArrayInfoExtra = namedtuple('ArrayInfoExtra', ArrayInfo._fields + (
+    'default_scan_spacing_index',))
+
+ReceiverInfoExtra = namedtuple('ReceiverInfoExtra', ReceiverInfo._fields + (
     'id', 'available'))
 
 MappingMode = namedtuple('MappingMode', ('id', 'name', 'sw_modes'))
@@ -123,8 +127,17 @@ class HeterodyneCalculator(JCMTCalculator):
         available_receivers = JCMTInstrument.get_options()
 
         self.receivers = OrderedDict((
-            (rx_id, ReceiverInfoID(
-                *rx_info, id=rx_id, available=any(
+            (rx_id, ReceiverInfoExtra(
+                *rx_info._replace(array=(
+                        None if rx_info.array is None else ArrayInfoExtra(
+                            *rx_info.array,
+                            default_scan_spacing_index=matching_index(
+                                rx_info.array.scan_spacings,
+                                (lambda x: abs(
+                                    x - rx_info.array.default_scan_spacing
+                                ) < 0.01)
+                            )))),
+                id=rx_id, available=any(
                     x == rx_info.name for x in available_receivers.values())))
             for (rx_id, rx_info)
             in HeterodyneReceiver.get_all_receivers().items()
@@ -420,23 +433,21 @@ class HeterodyneCalculator(JCMTCalculator):
         for (rx_id, rx_info) in self.receivers.items():
             array = rx_info.array
             if array is not None:
-                dy_spacing = None
-
                 if ((values['dy'] is None)
                         or (rx_id != receiver.id)
                         or is_default_value(values['dy'])):
                     # If we are attempting to format the default value, instead
                     # use the default spacing for this receiver.
-                    value = array.default_scan_spacing
+                    dy_spacing = array.default_scan_spacing_index
 
                 else:
                     # Otherwise use the current value.
                     value = values['dy']
 
-                dy_spacing = matching_index(
-                    array.scan_spacings,
-                    (lambda x: abs(x - value) < 1.0),
-                    default=None)
+                    dy_spacing = matching_index(
+                        array.scan_spacings,
+                        (lambda x: abs(x - value) < 1.0),
+                        default=None)
 
                 formatted_inputs['dy_spacing_{}'.format(rx_id)] = dy_spacing
 
