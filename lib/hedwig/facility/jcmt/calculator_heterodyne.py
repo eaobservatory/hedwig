@@ -533,8 +533,15 @@ class HeterodyneCalculator(JCMTCalculator):
 
         for (rx_id, rx_info) in self.receivers.items():
             if rx_info.array is not None:
-                values['dy_spacing_{}'.format(rx_id)] = int_or_none(
+                dy_spacing = int_or_none(
                     form.get('dy_spacing_{}'.format(rx_id), ''))
+
+                # Allow for the spacing parameter to not exist, e.g. when
+                # a different receiver or mapping mode is selected.
+                if dy_spacing is None:
+                    dy_spacing = rx_info.array.default_scan_spacing_index
+
+                values['dy_spacing_{}'.format(rx_id)] = dy_spacing
 
         return values
 
