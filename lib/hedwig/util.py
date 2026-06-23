@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -213,6 +213,22 @@ def matches_constraint(value, constraint):
         return (value in constraint)
 
     return (value == constraint)
+
+
+def matching_index(dictionary, predicate, default=()):
+    """
+    Find the index of the value in the given (ordered) dictionary matching
+    the given constraint.
+    """
+
+    for (i, value) in enumerate(dictionary.values()):
+        if predicate(value):
+            return i
+
+    if default == ():
+        raise KeyError('no item matching predicate found')
+
+    return default
 
 
 class ClosingMultiple(object):

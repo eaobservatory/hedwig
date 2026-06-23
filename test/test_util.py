@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 East Asian Observatory
+# Copyright (C) 2015-2026 East Asian Observatory
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -25,7 +25,7 @@ from hedwig.error import Error
 from hedwig.util import ClosingMultiple, FormatMaxDP, FormatSigFig, \
     is_list_like, item_combinations, \
     list_in_blocks, list_in_ranges, lower_except_abbr, \
-    matches_constraint
+    matches_constraint, matching_index
 
 from .compat import TestCase
 
@@ -154,6 +154,24 @@ class UtilTest(TestCase):
         self.assertTrue(matches_constraint(1, (1, 2)))
         self.assertTrue(matches_constraint(2, (1, 2)))
         self.assertFalse(matches_constraint(3, (1, 2)))
+
+    def test_matching_index(self):
+        d = OrderedDict((
+            ('a', 10),
+            ('b', 20),
+            ('c', 30),
+            ('d', 40),
+        ))
+
+        self.assertEqual(matching_index(d, lambda x: x == 10), 0)
+        self.assertEqual(matching_index(d, lambda x: x == 20), 1)
+        self.assertEqual(matching_index(d, lambda x: x == 30), 2)
+        self.assertEqual(matching_index(d, lambda x: x == 40), 3)
+
+        with self.assertRaisesRegex(KeyError, 'no item matching'):
+            matching_index(d, lambda x: x == 50)
+
+        self.assertIsNone(matching_index(d, (lambda x: x == 50), default=None))
 
     def test_sig_fig(self):
         fmt = FormatSigFig(3)

@@ -32,7 +32,7 @@ from ...type.misc import DefaultFloat, SectionedList, is_default_value
 from ...type.simple import \
     CalculatorMode, CalculatorResult, CalculatorValue, \
     RouteInfo
-from ...util import FormatSigFig
+from ...util import FormatSigFig, matching_index
 from ...view.util import float_or_none, int_or_none, str_or_none, parse_time
 from .calculator_jcmt import JCMTCalculator
 from .type import JCMTInstrument, JCMTWeather
@@ -433,10 +433,10 @@ class HeterodyneCalculator(JCMTCalculator):
                     # Otherwise use the current value.
                     value = values['dy']
 
-                for (i, dy_i) in enumerate(array.scan_spacings.values()):
-                    if abs(dy_i - value) < 1.0:
-                        dy_spacing = i
-                        break
+                dy_spacing = matching_index(
+                    array.scan_spacings,
+                    (lambda x: abs(x - value) < 1.0),
+                    default=None)
 
                 formatted_inputs['dy_spacing_{}'.format(rx_id)] = dy_spacing
 
