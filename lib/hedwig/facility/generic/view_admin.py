@@ -437,31 +437,6 @@ class GenericAdmin(object):
         extra_info = None
 
         if call_id is None:
-            if (args is not None) and ('copy' in args):
-                try:
-                    call_orig = db.get_call(self.id_, int(args['copy']))
-                except NoSuchRecord:
-                    raise ErrorPage('Original call to copy not found.')
-                if call_orig.type != call_type:
-                    raise ErrorPage('Original call is of different type.')
-
-                # Remove call-specific identifying information.
-                call = call_orig._replace(
-                    id=None, semester_id=None, queue_id=None,
-                    date_open=None, date_close=None,
-                    state=None, facility_id=None,
-                    semester_name='', queue_name='')
-
-                extra_info = self._view_call_edit_copy(db, call_orig)
-
-                flash(
-                    'Details have been copied from {} {} {}.',
-                    call_orig.semester_name, call_orig.queue_name,
-                    type_class.get_name(call_orig.type))
-            else:
-                call = self.get_new_call_default(call_type)._replace(
-                    type=call_type)
-
             # We are creating a new call, so need to be able to offer
             # menus of semesters and queues.
             semesters = db.search_semester(
@@ -478,6 +453,39 @@ class GenericAdmin(object):
                 raise ErrorPage(
                     'No queues (with affiliations) are available '
                     'for this call.')
+
+            # Check whether we are copying an existing call?
+            if (args is not None) and ('copy' in args):
+                try:
+                    call_orig = db.get_call(self.id_, int(args['copy']))
+                except NoSuchRecord:
+                    raise ErrorPage('Original call to copy not found.')
+                if call_orig.type != call_type:
+                    raise ErrorPage('Original call is of different type.')
+
+                # Remove call-specific identifying information except queue_id.
+                call = call_orig._replace(
+                    id=None, semester_id=None,
+                    date_open=None, date_close=None,
+                    state=None, facility_id=None,
+                    semester_name='', queue_name='')
+
+                # The previous call queue was retained as it is likely
+                # that one semester's call is being copied to create a
+                # new semester call for the same queue.  Remove it only
+                # if it is no longer available.
+                if call.queue_id not in queues:
+                    call = call._replace(queue_id=None)
+
+                extra_info = self._view_call_edit_copy(db, call_orig)
+
+                flash(
+                    'Details have been copied from {} {} {}.',
+                    call_orig.semester_name, call_orig.queue_name,
+                    type_class.get_name(call_orig.type))
+            else:
+                call = self.get_new_call_default(call_type)._replace(
+                    type=call_type)
 
             # Get list of existing calls for this type.
             existing_calls = [
