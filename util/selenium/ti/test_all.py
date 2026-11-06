@@ -30,7 +30,6 @@ from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from selenium.common.exceptions import NoSuchElementException
@@ -112,7 +111,7 @@ class IntegrationTest(DummyConfigTestCase):
         self.server = DummyServer(self.db)
 
         options = Options()
-        options.binary = FirefoxBinary(config.get('utilities', 'firefox'))
+        options.binary_location = config.get('utilities', 'firefox')
         self.browser = webdriver.Firefox(options=options)
         self.browser.set_window_size(1200, 800)
 
