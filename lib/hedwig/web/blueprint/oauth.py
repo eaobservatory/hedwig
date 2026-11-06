@@ -78,11 +78,13 @@ def create_oauth_blueprint(db, app):
             form = flask_request.form
             try:
                 if 'submit_cancel' in form:
+                    grant = server.get_consent_grant()
                     return server.create_authorization_response(
-                        grant_user=None)
+                        grant_user=None, grant=grant)
                 if 'submit_confirm' in form:
+                    grant = server.get_consent_grant()
                     return server.create_authorization_response(
-                        grant_user=current_user.person.id)
+                        grant_user=current_user.person.id, grant=grant)
             except OAuth2Error as e:
                 return _make_response('error.html', {
                     'title': 'Error',
@@ -91,9 +93,9 @@ def create_oauth_blueprint(db, app):
                 })
 
         try:
-            grant = server.validate_consent_request()
+            grant = server.get_consent_grant()
         except OAuth2Error as e:
-            logger.error('Error validating grant request: {}', e.message)
+            logger.error('Error validating grant request: {}', e.args[0])
             return _make_response('error.html', {
                 'title': 'Error',
                 'message': 'Error validating request.',
@@ -199,9 +201,9 @@ class AuthorizationCodeGrant(grants.AuthorizationCodeGrant):
     def save_authorization_code(self, code, request):
         flask_g.db.add_oauth_code(
             code=str_to_unicode(code),
-            redirect_uri=request.redirect_uri,
+            redirect_uri=request.payload.redirect_uri,
             response_type='code',
-            nonce=request.data.get('nonce'),
+            nonce=request.payload.data.get('nonce'),
             client_id=request.client.get_client_id(),
             scope=request.scope,
             person_id=request.user)
@@ -246,6 +248,11 @@ class Client(namedtuple('Client_', ['id', 'name', 'secret', 'redirect_uris'])):
 
     def check_token_endpoint_auth_method(self, method):
         return method in ('client_secret_basic', 'client_secret_post')
+
+    def check_endpoint_auth_method(self, method, endpoint):
+        if endpoint == 'token':
+            return self.check_token_endpoint_auth_method(method)
+        return True
 
     def check_response_type(self, response_type):
         return response_type == 'code'

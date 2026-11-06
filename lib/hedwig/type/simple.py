@@ -204,6 +204,14 @@ class OAuthCode(namedtuple(
         return int(
             (self.issued - datetime.utcfromtimestamp(0)).total_seconds())
 
+    def get_acr(self):
+        # No authentication assurance level is recorded for this code.
+        return None
+
+    def get_amr(self):
+        # No authentication method details are recorded for this code.
+        return None
+
 
 class OAuthToken(namedtuple(
         '_OAuthToken', [x.name for x in oauth_token.columns])):
