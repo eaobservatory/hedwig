@@ -17,9 +17,6 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
-from contextlib import contextmanager
-
-from flask import g as flask_g
 from werkzeug.test import create_environ
 
 from ..compat import first_value
@@ -91,21 +88,14 @@ class PDFWriterFlask(PDFWriter):
         # Request and return the PDF.
         return self._request_pdf(url, person_id)
 
-    @contextmanager
     def _fixed_auth(self, person_id, session_options={}):
         """
-        Prepare fixed log-in information by temporarily setting a
-        `before_request` function to place a fixed `current_user`
-        object in the flask `g` object.
+        Prepare fixed log-in information to be placed in the
+        `current_user` attribute of the flask `g` object.
 
         If `session_options` is provided, it should be a dictionary of extra
         information to include in the `current_user` object.
         """
-
-        # Make sure there are no "before_request" functions, since we
-        # will clear them later -- `create_web_app` should have been called
-        # using: without_auth=True.
-        assert (not self.app.before_request_funcs), 'no before_request func.'
 
         user = None
         person = None
@@ -113,23 +103,12 @@ class PDFWriterFlask(PDFWriter):
             person = self.db.get_person(person_id)
             user = null_tuple(UserInfo)._replace(id=person.user_id)
 
-        current_user = CurrentUser(
+        return CurrentUser(
             user=user,
             person=person,
             is_admin=False,
             auth_token_id=None,
             options=session_options)
-
-        try:
-            @self.app.before_request
-            def apply_fixed_auth():
-                flask_g.current_user = current_user
-
-            yield
-
-        finally:
-            # Remove our fixed log-in "before_request" function.
-            self.app.before_request_funcs.clear()
 
     def _prepare_environ(self):
         """

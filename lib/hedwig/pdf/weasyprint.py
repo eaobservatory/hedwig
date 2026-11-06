@@ -20,6 +20,7 @@ from __future__ import absolute_import, division, print_function, \
 import logging
 from contextlib import closing
 
+from flask import g as flask_g
 from flask import request as _flask_request
 from flask_weasyprint import HTML as FWP_HTML, make_url_fetcher
 from weasyprint import HTML as WP_HTML, CSS
@@ -50,8 +51,10 @@ class PDFWriterWeasyPrint(PDFWriterFlask):
             string='@page {{size: {};}}'.format(self.page_size)))
 
         # Perform the request to generate the PDF using WeasyPrint.
-        with self._fixed_auth(person_id, session_options=session_options), \
-                self.app.request_context(self._prepare_environ()):
+        with self.app.request_context(self._prepare_environ()):
+            flask_g.current_user = self._fixed_auth(
+                person_id, session_options=session_options)
+
             if not section:
                 return FWP_HTML(url).write_pdf(stylesheets=stylesheets)
 
