@@ -29,6 +29,7 @@ from authlib.oauth2.rfc6749.util import list_to_scope, scope_to_list
 from authlib.oidc.core import UserInfo
 from authlib.oidc.core import grants as oidc_grants
 from authlib.integrations.flask_oauth2 import AuthorizationServer
+from joserfc.jwk import RSAKey
 from flask import Blueprint
 from flask import request as flask_request
 from flask import g as flask_g
@@ -167,15 +168,17 @@ class OpenIDCode(oidc_grants.OpenIDCode):
         return bool(flask_g.db.search_oauth_code(
             client_id=client.id, nonce=nonce))
 
-    def get_jwt_config(self, grant):
+    def resolve_client_private_key(self, client):
         if key is None:
             raise Exception('No OIDC key is present')
+        return RSAKey.import_key(key)
 
+    def get_client_algorithm(self, client):
+        return 'RS512'
+
+    def get_client_claims(self, client):
         return {
-            'key': key,
-            'alg': 'RS512',
             'iss': get_config().get('oauth_oidc', 'iss'),
-            'exp': 3600,
         }
 
     def generate_user_info(self, user, scope):
