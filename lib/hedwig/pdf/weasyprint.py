@@ -18,6 +18,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 import logging
+from contextlib import closing
 
 from flask import request as _flask_request
 from flask_weasyprint import HTML as FWP_HTML, make_url_fetcher
@@ -62,11 +63,11 @@ class PDFWriterWeasyPrint(PDFWriterFlask):
             base_url = _flask_request.url
             url_fetcher = make_url_fetcher()
 
-            response = url_fetcher(
-                '{}{}/section'.format(base_url, url))
+            with closing(url_fetcher(
+                    '{}{}/section'.format(base_url, url))) as response:
+                sections = parse_multipart_response(response.read())
 
-            for (mime_type, data) in parse_multipart_response(
-                    response['string']):
+            for (mime_type, data) in sections:
                 if mime_type == 'application/pdf':
                     pdfs.append(data)
 
