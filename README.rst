@@ -13,7 +13,7 @@ To prepare a copy of Hedwig for testing and development, you should clone
 the Git repository into your workspace.
 You can then either "install" the package, perhaps in a "virtualenv"::
 
-    virtualenv-2.7 venv
+    python3 -m venv venv
     source venv/bin/activate
     pip install --editable .
 
@@ -63,6 +63,8 @@ The following Python modules should be installed:
 * SQLAlchemy
 * Authlib (for the OAuth2 provider)
 * user-agents (optional, for log in session list)
+* weasyprint
+* flask-weasyprint
 
 In addition the following back-ported modules may be required
 when using older versions of Python:
@@ -236,7 +238,7 @@ Tests
 
 The Hedwig unit tests can be run with::
 
-    PYTHONPATH=lib python2 -m unittest discover
+    PYTHONPATH=lib python3 -m unittest discover
 
 (You can omit the `PYTHONPATH` setting if you have activated
 a "virtualenv" or already set `PYTHONPATH` as described above.)
@@ -246,7 +248,7 @@ integration test.
 This also acquires the screenshots used in the documentation.
 It can be run with::
 
-    PYTHONPATH=lib:util/selenium python2 -m unittest discover -s ti
+    PYTHONPATH=lib:util/selenium python3 -m unittest discover -s ti
 
 Note that the tests use the example configuration file
 `hedwig.ini.template` in order to avoid requiring configuration.
