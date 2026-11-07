@@ -1,9 +1,8 @@
 # Example WSGI script to set up Hedwig.
 
-# Activate your "virtualenv": enter its absolute path here.
-# (Requirements and Hedwig (perhaps in "editable" mode) can be installed here.)
-activate_this = '..../venv/bin/activate_this.py'
-execfile(activate_this, dict(__file__=activate_this))
+# Give Apache the path to this script and your "virtualenv", e.g.:
+# WSGIScriptAlias / ..../hedwig/hedwig.wsgi
+# WSGIDaemonProcess hedwig python-home=..../venv
 
 from hedwig.web.app import create_web_app
 from hedwig.config import set_home
