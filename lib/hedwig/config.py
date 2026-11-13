@@ -25,7 +25,7 @@ from itertools import count
 import json
 import os
 
-from .compat import make_type, python_version
+from .compat import make_type, open_utf_8, python_version
 from .error import FormattedError
 from .db.engine import get_engine
 from .type.simple import CalculatorInfo, TargetToolInfo
@@ -36,13 +36,9 @@ if python_version < 3:
 
     def read_config(file_):
         config = _ConfigParser()
-        with io_open(file_, mode='rt', encoding='utf_8') as f:
+        with open_utf_8(file_) as f:
             config.readfp(f, file_)
         return config
-
-    def read_json(file_):
-        with io_open(file_, mode='rt', encoding='utf_8') as f:
-            return json.load(f)
 
 else:
     from configparser import ConfigParser as _ConfigParser
@@ -51,10 +47,6 @@ else:
         config = _ConfigParser()
         config.read(file_, encoding='utf_8')
         return config
-
-    def read_json(file_):
-        with open(file_, 'rt', encoding='utf_8') as f:
-            return json.load(f)
 
 
 config_file = ('etc', 'hedwig.ini')
@@ -309,6 +301,11 @@ def get_home():
         return home_directory
 
     return os.environ.get('HEDWIG_DIR', os.getcwd())
+
+
+def read_json(file_):
+    with open_utf_8(file_) as f:
+        return json.load(f)
 
 
 def set_home(directory):

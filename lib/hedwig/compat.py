@@ -18,6 +18,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+from contextlib import contextmanager
 from itertools import islice
 from sys import version_info
 
@@ -33,6 +34,7 @@ if python_version < 3:
 
     from codecs import ascii_decode, ascii_encode, utf_8_encode
     from collections import OrderedDict
+    from io import open as io_open
     from math import floor as _math_floor
     from urllib import quote as _url_quote
     from urllib import urlencode as _urlencode
@@ -94,6 +96,11 @@ if python_version < 3:
             return next(islice(dictionary.itervalues(), n, None))
         except StopIteration:
             raise IndexError('dictionary has no value {}'.format(n))
+
+    @contextmanager
+    def open_utf_8(file_):
+        with io_open(file_, mode='rt', encoding='utf_8') as f:
+            yield f
 
     def floor(value):
         return int(_math_floor(value))
@@ -167,6 +174,11 @@ else:
             return next(islice(dictionary.values(), n, None))
         except StopIteration:
             raise IndexError('dictionary has no value {}'.format(n))
+
+    @contextmanager
+    def open_utf_8(file_):
+        with open(file_, 'rt', encoding='utf_8') as f:
+            yield f
 
     class ExceptionWithMessage(Exception):
         """Exception class which restores the 'message' property."""

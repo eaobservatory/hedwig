@@ -22,6 +22,7 @@ from collections import namedtuple, OrderedDict
 import os.path
 import re
 
+from ..compat import open_utf_8
 from ..error import ConversionError
 from ..file.graphviz import graphviz_to_png
 from ..web.format import format_text_rst
@@ -152,7 +153,7 @@ def _read_rst_file(doc_root, path_name):
     Read a file and return the body, title and toc.
     """
 
-    with open(os.path.join(path_name)) as f:
+    with open_utf_8(os.path.join(path_name)) as f:
         text = f.read()
 
     return format_text_rst(text, extract_title_toc=True, start_heading=2)
@@ -180,7 +181,7 @@ def _get_page_title(doc_root, page_name, title_cache, mtime=None):
     if (toc_entry is not None) and not (toc_entry.mtime < mtime):
         return toc_entry.title
 
-    with open(path_name) as f:
+    with open_utf_8(path_name) as f:
         # Assume that the first line of the file is the title.  This
         # should be more efficient than parsing the whole file as RST.
         toc_entry_title = f.readline().strip()
