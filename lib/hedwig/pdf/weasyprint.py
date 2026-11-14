@@ -20,6 +20,12 @@ from __future__ import absolute_import, division, print_function, \
 import logging
 from contextlib import closing
 
+# Suppress warnings from weasyprint (e.g. those about CSS properties which
+# it does not recognize).  Do this before importing so that we do not
+# get info log messages from this step.
+logging.getLogger('weasyprint').setLevel(logging.ERROR)
+logging.getLogger('fontTools').setLevel(logging.ERROR)
+
 from flask import g as flask_g
 from flask import request as _flask_request
 from flask_weasyprint import HTML as FWP_HTML, make_url_fetcher
@@ -28,10 +34,6 @@ from weasyprint import HTML as WP_HTML, CSS
 from ..error import FormattedError
 from ..web.util import parse_multipart_response
 from .flask import PDFWriterFlask
-
-# Suppress warnings from weasyprint (e.g. those about CSS properties which
-# it does not recognize).
-logging.getLogger('weasyprint').setLevel(logging.ERROR)
 
 
 class PDFWriterWeasyPrint(PDFWriterFlask):
