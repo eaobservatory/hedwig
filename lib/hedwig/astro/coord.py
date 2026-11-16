@@ -29,6 +29,7 @@ from ..error import UserError
 
 # Prevent Astropy from automatically downloading IERS data.
 astropy_iers_conf.auto_download = False
+astropy_iers_conf.auto_max_age = None
 
 CoordWithFmt = namedtuple('CoordWithFmt', ('x', 'y', 'x_deg', 'y_deg'))
 
